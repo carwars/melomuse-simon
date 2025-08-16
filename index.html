@@ -56,19 +56,19 @@
     }
 
     header{
-      display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px;
+      display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; flex-wrap:wrap;
     }
     .title{ font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--accent);
-      text-shadow:0 0 8px rgba(255,255,255,.35); font-size:1.6rem;
+      text-shadow:0 0 8px rgba(255,255,255,.35); font-size:1.6rem; flex:1 1 auto;
     }
 
-    .hud{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
-    .scorebox{ background:#0e1726; border:1px solid rgba(255,255,255,.06); padding:8px 12px; border-radius:10px; min-width:100px;
-      display:flex; align-items:center; justify-content:space-between; gap:8px; }
-    .scorebox .label{opacity:.7; font-size:.9rem}
-    .scorebox .value{ font-variant-numeric:tabular-nums; font-weight:700; }
+    .hud{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; flex:1 1 100%; }
+    .scorebox{ background:#0e1726; border:1px solid rgba(255,255,255,.06); padding:8px 12px; border-radius:10px; 
+      display:flex; align-items:center; justify-content:space-between; gap:8px; white-space:nowrap; }
+    .scorebox .label{opacity:.7; font-size:.95rem}
+    .scorebox .value{ font-variant-numeric:tabular-nums; font-weight:800; font-size:1.1rem; }
 
-    .controls{ display:flex; gap:10px; align-items:center; }
+    .controls{ display:flex; gap:10px; align-items:center; margin-left:auto; }
     .btn{ appearance:none; border:1px solid rgba(255,255,255,.08); background:#101b2b; color:var(--txt); padding:10px 14px; border-radius:10px; cursor:pointer;
       font-weight:600; transition:transform .05s ease, background .2s ease, box-shadow .2s ease; box-shadow:0 4px 14px rgba(0,0,0,.25);
     }
@@ -76,7 +76,7 @@
     .btn:active{ transform:translateY(1px) }
     .btn.primary{ background:#12314a; border-color:#1d4a6c }
 
-    .status{ margin-left:auto; font-size:.9rem; opacity:.9 }
+    .status{ margin-left:auto; font-size:.9rem; opacity:.9; width:100%; }
 
     .board{
       margin-top:12px; display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; gap:14px;
@@ -119,9 +119,15 @@
       font-size:1.4rem; text-align:center; padding:20px; gap:20px; z-index:10;
     }
 
-    @media (max-width:380px){
-      .scorebox{ min-width:86px }
-      .btn{ padding:8px 10px }
+    /* --- Petits écrans (téléphones étroits) --- */
+    @media (max-width: 480px){
+      header{ flex-direction:column; align-items:flex-start; }
+      .hud{ width:100%; justify-content:space-between; }
+      .status{ margin-left:0; font-size:.85rem; }
+      .btn{ padding:8px 12px; }
+      .scorebox{ padding:6px 10px; }
+      .scorebox .label{ font-size:.9rem }
+      .scorebox .value{ font-size:1rem }
     }
   </style>
 </head>
@@ -138,7 +144,6 @@
             </div>
             <div class="controls">
               <button id="start" class="btn primary" aria-label="Démarrer ou relancer la partie">Nouvelle partie</button>
-              <button id="mute" class="btn" aria-pressed="false" aria-label="Activer ou couper le son">Son: ON</button>
             </div>
           </div>
         </header>
@@ -160,7 +165,6 @@
   const pads = Array.from(document.querySelectorAll('.pad'));
   const scoreEl = document.getElementById('score');
   const startBtn = document.getElementById('start');
-  const muteBtn  = document.getElementById('mute');
   const statusEl = document.getElementById('status');
   const overlay  = document.getElementById('overlay');
 
@@ -171,7 +175,6 @@
   let userIndex = 0;
   let score = 0;
   let acceptingInput = false;
-  let isMuted = false;
 
   const AudioCtx = window.AudioContext || window.webkitAudioContext;
   const audioCtx = new AudioCtx();
@@ -182,7 +185,6 @@
   function resumeAudio(){ if (audioCtx.state === 'suspended') audioCtx.resume(); }
 
   function playTone(freq, duration=550, type='square'){
-    if (isMuted) return Promise.resolve();
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
     osc.type = type; osc.frequency.value = freq;
@@ -306,11 +308,6 @@
   }
 
   startBtn.addEventListener('click', startGame);
-  muteBtn.addEventListener('click', ()=>{
-    isMuted = !isMuted;
-    muteBtn.textContent = 'Son: ' + (isMuted ? 'OFF' : 'ON');
-    muteBtn.setAttribute('aria-pressed', String(!isMuted));
-  });
 
   pads.forEach(p=>{
     const id = Number(p.dataset.id);
